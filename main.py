@@ -1,36 +1,36 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, WebSocket, Request
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
 import time
+import random
 
 app = FastAPI()
 
 # -------------------------
-# SECURITY LAYER
+# CORS (LOCK THIS LATER)
 # -------------------------
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://your-username.github.io",  # lock later to your Pages
+        "https://your-username.github.io",  # replace with your Pages URL
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -------------------------
-# RATE LIMIT (simple in-memory)
+# SIMPLE RATE LIMIT (IN-MEMORY)
 # -------------------------
 request_log = {}
 
 def rate_limited(ip: str, limit=30):
     now = time.time()
-    window = 60  # 1 minute window
+    window = 60
 
     if ip not in request_log:
         request_log[ip] = []
 
-    # remove old requests
     request_log[ip] = [t for t in request_log[ip] if now - t < window]
 
     if len(request_log[ip]) >= limit:
@@ -40,25 +40,21 @@ def rate_limited(ip: str, limit=30):
     return False
 
 # -------------------------
-# PRIVATE ENGINE WRAPPER (SIMULATED)
+# PRIVATE ENGINE PLACEHOLDER
+# (Replace with your real engine later)
 # -------------------------
 def engine_compute():
-    """
-    NEVER expose internal logic here.
-    This is your private repo integration point.
-    """
     return {
-        "risk_series": [0.2, 0.35, 0.5, 0.4],
-        "health": [90, 80, 65, 70],
-        "nodes": ["A", "B", "C", "D"],
+        "risk": round(random.uniform(0.2, 0.9), 2),
+        "health": round(random.uniform(60, 100), 1),
         "status": "stable"
     }
 
 # -------------------------
-# PUBLIC ENDPOINT
+# REST ENDPOINT
 # -------------------------
 @app.get("/status")
-async def status(request: Request):
+def status(request: Request):
 
     ip = request.client.host
 
@@ -67,11 +63,10 @@ async def status(request: Request):
 
     data = engine_compute()
 
-    # SANITIZATION LAYER (CRITICAL)
+    # SANITIZED OUTPUT ONLY
     return {
-        "risk_series": data["risk_series"],
+        "risk": data["risk"],
         "health": data["health"],
-        "nodes": data["nodes"],
         "status": data["status"]
     }
 
@@ -79,16 +74,40 @@ async def status(request: Request):
 # SIMULATION ENDPOINT
 # -------------------------
 @app.post("/simulate")
-async def simulate(payload: dict, request: Request):
+def simulate(request: Request, payload: dict):
 
     ip = request.client.host
 
     if rate_limited(ip):
         return {"error": "rate_limit_exceeded"}
 
-    # DO NOT expose computation
     return {
         "result": "ok",
-        "summary": "simulation executed",
-        "confidence": 0.74
+        "summary": "simulation complete",
+        "confidence": round(random.uniform(0.6, 0.9), 2)
     }
+
+# -------------------------
+# REAL-TIME WEBSOCKET STREAM
+# -------------------------
+@app.websocket("/ws/live")
+async def live_stream(websocket: WebSocket):
+    await websocket.accept()
+
+    try:
+        while True:
+
+            # Simulated engine output (replace later with real engine call)
+            data = {
+                "risk": round(random.uniform(0.2, 0.9), 2),
+                "health": round(random.uniform(60, 100), 1),
+                "status": "stable"
+            }
+
+            await websocket.send_json(data)
+
+            # stream interval (1–2 seconds)
+            await asyncio.sleep(2)
+
+    except Exception:
+        await websocket.close()
