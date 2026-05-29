@@ -52,13 +52,12 @@ function updateDashboard(data) {
     "System Status: " + data.status +
     "<br>Predicted Failure Risk: " + risk.toFixed(1) + "%";
 
-  // Color warning system
   if (risk > 70) {
-    panel.style.color = "#ef4444"; // red
+    panel.style.color = "#ef4444";
   } else if (risk > 40) {
-    panel.style.color = "#facc15"; // yellow
+    panel.style.color = "#facc15";
   } else {
-    panel.style.color = "#00ffe1"; // green
+    panel.style.color = "#00ffe1";
   }
 
   const value =
@@ -87,7 +86,6 @@ function startFakeStream() {
 
     updateDashboard(fakeData);
 
-    // Update graph node colors
     if (cy) {
       cy.nodes().forEach(n => {
         const val = Math.random() * 100;
@@ -114,7 +112,7 @@ function getRandomStatus() {
 }
 
 // -------------------------
-// DEPENDENCY GRAPH
+// DEPENDENCY GRAPH (FIXED)
 // -------------------------
 function initGraph() {
   cy = cytoscape({
@@ -124,4 +122,46 @@ function initGraph() {
       { data: { id: 'A' } },
       { data: { id: 'B' } },
       { data: { id: 'C' } },
+      { data: { id: 'D' } },
+      { data: { id: 'E' } },
+      { data: { id: 'F' } },
+
+      { data: { source: 'A', target: 'B' } },
+      { data: { source: 'A', target: 'C' } },
+      { data: { source: 'B', target: 'C' } },
+      { data: { source: 'D', target: 'A' } },
+      { data: { source: 'E', target: 'B' } },
+      { data: { source: 'F', target: 'E' } }
+    ],
+
+    style: [
       {
+        selector: 'node',
+        style: {
+          'background-color': '#00ffe1',
+          'label': 'data(id)',
+          'color': '#ffffff',
+          'font-size': 12
+        }
+      },
+      {
+        selector: 'edge',
+        style: {
+          'line-color': '#334155',
+          'width': 2
+        }
+      }
+    ],
+
+    layout: {
+      name: 'grid'
+    }
+  });
+}
+
+// -------------------------
+// START SYSTEM
+// -------------------------
+initChart();
+initGraph();
+startFakeStream();
