@@ -12,12 +12,16 @@
   <div id="dashboard">
     <div id="status-panel"></div>
     <canvas id="graph"></canvas>
+    <div id="network"></div>
   </div>
 
   <!-- Chart.js MUST load before your app -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Your application logic (UPDATED VERSION) -->
+  <!-- Cytoscape (dependency graph engine) -->
+  <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+
+  <!-- Your application logic -->
   <script src="assets/app.v0.2.0.js"></script>
 
 </body>
