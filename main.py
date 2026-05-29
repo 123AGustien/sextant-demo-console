@@ -7,12 +7,12 @@ import random
 app = FastAPI()
 
 # -------------------------
-# CORS (LOCK THIS LATER)
+# CORS (LOCK TO YOUR DOMAIN)
 # -------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://your-username.github.io",  # replace with your Pages URL
+        "https://123agustien.github.io"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -26,11 +26,12 @@ request_log = {}
 
 def rate_limited(ip: str, limit=30):
     now = time.time()
-    window = 60
+    window = 60  # seconds
 
     if ip not in request_log:
         request_log[ip] = []
 
+    # remove old requests outside window
     request_log[ip] = [t for t in request_log[ip] if now - t < window]
 
     if len(request_log[ip]) >= limit:
@@ -39,76 +40,58 @@ def rate_limited(ip: str, limit=30):
     request_log[ip].append(now)
     return False
 
-# -------------------------
-# PRIVATE ENGINE PLACEHOLDER
-# (Replace with your real engine later)
-# -------------------------
-def engine_compute():
-    return {
-        "risk": round(random.uniform(0.2, 0.9), 2),
-        "health": round(random.uniform(60, 100), 1),
-        "status": "stable"
-    }
 
 # -------------------------
-# REST ENDPOINT
+# REST API ENDPOINT
 # -------------------------
-@app.get("/status")
-def status(request: Request):
-
+@app.get("/state")
+async def get_state(request: Request):
     ip = request.client.host
 
     if rate_limited(ip):
-        return {"error": "rate_limit_exceeded"}
-
-    data = engine_compute()
-
-    # SANITIZED OUTPUT ONLY
-    return {
-        "risk": data["risk"],
-        "health": data["health"],
-        "status": data["status"]
-    }
-
-# -------------------------
-# SIMULATION ENDPOINT
-# -------------------------
-@app.post("/simulate")
-def simulate(request: Request, payload: dict):
-
-    ip = request.client.host
-
-    if rate_limited(ip):
-        return {"error": "rate_limit_exceeded"}
+        return {
+            "status": "RATE_LIMITED",
+            "nodes": []
+        }
 
     return {
-        "result": "ok",
-        "summary": "simulation complete",
-        "confidence": round(random.uniform(0.6, 0.9), 2)
+        "status": random.choice(["STABLE", "DEGRADED", "RECOVERING"]),
+        "nodes": [
+            random.randint(10, 100),
+            random.randint(10, 100),
+            random.randint(10, 100),
+            random.randint(10, 100),
+            random.randint(10, 100),
+            random.randint(10, 100),
+        ],
+        "timestamp": time.time()
     }
 
+
 # -------------------------
-# REAL-TIME WEBSOCKET STREAM
+# WEBSOCKET STREAM (LIVE SYSTEM)
 # -------------------------
-@app.websocket("/ws/live")
-async def live_stream(websocket: WebSocket):
+@app.websocket("/stream")
+async def stream(websocket: WebSocket):
     await websocket.accept()
 
     try:
         while True:
-
-            # Simulated engine output (replace later with real engine call)
-            data = {
-                "risk": round(random.uniform(0.2, 0.9), 2),
-                "health": round(random.uniform(60, 100), 1),
-                "status": "stable"
+            payload = {
+                "status": random.choice(["STABLE", "DEGRADED", "RECOVERING"]),
+                "nodes": [
+                    random.randint(10, 100),
+                    random.randint(10, 100),
+                    random.randint(10, 100),
+                    random.randint(10, 100),
+                    random.randint(10, 100),
+                    random.randint(10, 100),
+                ],
+                "timestamp": time.time()
             }
 
-            await websocket.send_json(data)
-
-            # stream interval (1–2 seconds)
-            await asyncio.sleep(2)
+            await websocket.send_json(payload)
+            await asyncio.sleep(1)
 
     except Exception:
         await websocket.close()
-uvicorn main:app --host 0.0.0.0 --port 10000
