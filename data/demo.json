@@ -1,0 +1,7 @@
+{
+  "status": "STABLE (DEMO MODE)",
+  "nodes": [
+    { "name": "Node A", "state": "healthy" },
+    { "name": "Node B", "state": "degraded" }
+  ]
+}
