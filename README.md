@@ -1,4 +1,10 @@
+## Intellectual Property Notice
 
+This repository is published for evaluation and demonstration purposes.
+
+Commercial use, redistribution, or derivative commercial implementations require prior written permission from the copyright holder.
+
+See NOTICE.md for additional information.
 # Sextant Resilience Demo Console
 
 ## Overview
