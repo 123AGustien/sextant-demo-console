@@ -1,5 +1,5 @@
 const WS_URL = "ws://localhost:8000/stream"; 
-// ⚠️ later change to your deployed backend URL (wss://)
+// later: replace with wss://your-backend-url
 
 let chart;
 
@@ -45,7 +45,38 @@ function updateDashboard(data) {
 }
 
 // -------------------------
-// CONNECT WEBSOCKET
+// FAKE STREAM (FALLBACK MODE)
+// -------------------------
+function startFakeStream() {
+  setInterval(() => {
+    const fakeData = {
+      status: getRandomStatus(),
+      nodes: Array.from({ length: 6 }, () => Math.random() * 100)
+    };
+
+    updateDashboard(fakeData);
+  }, 1000);
+}
+
+function getRandomStatus() {
+  const states = ["STABLE", "DEGRADED", "CRITICAL", "FAILURE"];
+  return states[Math.floor(Math.random() * states.length)];
+}
+
+// -------------------------
+// START SYSTEM
+// -------------------------
+initChart();
+
+// Try backend first, fallback to fake mode
+try {
+  connectWebSocket();
+} catch (e) {
+  startFakeStream();
+}
+
+// -------------------------
+// WEBSOCKET (future-ready)
 // -------------------------
 function connectWebSocket() {
   const ws = new WebSocket(WS_URL);
@@ -60,17 +91,12 @@ function connectWebSocket() {
   };
 
   ws.onclose = () => {
-    console.log("WebSocket closed. Reconnecting...");
-    setTimeout(connectWebSocket, 2000);
+    console.log("WebSocket closed. Switching to fallback...");
+    startFakeStream();
   };
 
-  ws.onerror = (err) => {
-    console.error("WebSocket error:", err);
+  ws.onerror = () => {
+    console.log("WebSocket error. Using fallback mode.");
+    startFakeStream();
   };
 }
-
-// -------------------------
-// START SYSTEM
-// -------------------------
-initChart();
-connectWebSocket();
