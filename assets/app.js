@@ -1,46 +1,76 @@
-let t = 0;
+const WS_URL = "ws://localhost:8000/stream"; 
+// ⚠️ later change to your deployed backend URL (wss://)
 
-async function loadData() {
-  try {
-    const res = await fetch("./data/demo.json");
-    if (!res.ok) throw new Error("Load failed");
-    return await res.json();
-  } catch (e) {
-    return { status: "OFFLINE", nodes: [] };
-  }
-}
+let chart;
 
-function simulate(nodes) {
-  t++;
+// -------------------------
+// INIT CHART
+// -------------------------
+function initChart() {
+  const ctx = document.getElementById("graph").getContext("2d");
 
-  return nodes.map(n => {
-    const drift = Math.sin(t / 5) * 10;
-    const noise = Math.random() * 5;
-    return Math.max(0, n + drift + noise);
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "System Load",
+        data: [],
+        borderColor: "cyan",
+        fill: false
+      }]
+    }
   });
 }
 
-function render(data) {
-  const statusPanel = document.getElementById("status-panel");
+// -------------------------
+// UPDATE UI
+// -------------------------
+function updateDashboard(data) {
+  document.getElementById("status-panel").innerHTML =
+    "System Status: " + data.status;
 
-  const state = simulate(data.nodes);
+  const value =
+    data.nodes.reduce((a, b) => a + b, 0) / data.nodes.length;
 
-  const avg = state.reduce((a, b) => a + b, 0) / state.length;
+  chart.data.labels.push(Date.now());
+  chart.data.datasets[0].data.push(value);
 
-  const status = avg > 60 ? "DEGRADED" : "STABLE";
+  if (chart.data.labels.length > 20) {
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
 
-  statusPanel.innerHTML =
-    "System Status: " + status;
-
-  console.log("Live nodes:", state);
+  chart.update();
 }
 
-async function loop() {
-  const data = await loadData();
+// -------------------------
+// CONNECT WEBSOCKET
+// -------------------------
+function connectWebSocket() {
+  const ws = new WebSocket(WS_URL);
 
-  setInterval(() => {
-    render(data);
-  }, 1000);
+  ws.onopen = () => {
+    console.log("WebSocket connected");
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    updateDashboard(data);
+  };
+
+  ws.onclose = () => {
+    console.log("WebSocket closed. Reconnecting...");
+    setTimeout(connectWebSocket, 2000);
+  };
+
+  ws.onerror = (err) => {
+    console.error("WebSocket error:", err);
+  };
 }
 
-loop();
+// -------------------------
+// START SYSTEM
+// -------------------------
+initChart();
+connectWebSocket();
