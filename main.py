@@ -111,3 +111,4 @@ async def live_stream(websocket: WebSocket):
 
     except Exception:
         await websocket.close()
+uvicorn main:app --host 0.0.0.0 --port 10000
