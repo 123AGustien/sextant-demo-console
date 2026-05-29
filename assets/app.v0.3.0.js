@@ -56,7 +56,7 @@ function startFakeStream() {
 
     updateDashboard(fakeData);
 
-    // optional: update graph colors based on health
+    // Update node colors based on health
     if (cy) {
       cy.nodes().forEach(n => {
         const val = Math.random() * 100;
@@ -104,3 +104,32 @@ function initGraph() {
 
     style: [
       {
+        selector: 'node',
+        style: {
+          'background-color': '#00ffe1',
+          'label': 'data(id)',
+          'color': '#ffffff',
+          'font-size': 12
+        }
+      },
+      {
+        selector: 'edge',
+        style: {
+          'line-color': '#334155',
+          'width': 2
+        }
+      }
+    ],
+
+    layout: {
+      name: 'grid'
+    }
+  });
+}
+
+// -------------------------
+// START SYSTEM
+// -------------------------
+initChart();
+initGraph();
+startFakeStream();
