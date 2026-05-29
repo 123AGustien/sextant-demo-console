@@ -1,7 +1,4 @@
 {
-  "status": "STABLE (DEMO MODE)",
-  "nodes": [
-    { "name": "Node A", "state": "healthy" },
-    { "name": "Node B", "state": "degraded" }
-  ]
+  "status": "STABLE",
+  "nodes": [12, 25, 40, 33, 55, 70]
 }
